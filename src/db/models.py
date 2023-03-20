@@ -1,0 +1,50 @@
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+from datetime import datetime
+from db.db import Base
+from sqlalchemy.orm import relationship
+
+
+class Url(Base):
+    __tablename__ = 'urls'
+
+    id = Column(Integer, primary_key=True)
+    original = Column(String(1024), unique=True, nullable=False)
+    short = Column(String(128), unique=True, index=True, nullable=False)
+    description = Column(String(1024), nullable=False)
+    is_deleted = Column(Boolean, default=False)
+    is_private = Column(Boolean, default=False)
+
+    user = relationship('User', back_populates='urls')
+    transitions = relationship('Transition', back_populates='url')
+
+    user_id = Column(
+        Integer,
+        ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=True
+    )
+
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+
+    urls = relationship('Url', back_populates='user')
+    transitions = relationship('Transition', back_populates='user')
+
+
+class Transition(Base):
+    __tablename__ = 'transitions'
+
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime, index=True, default=datetime.utcnow)
+
+    url = relationship('URL', back_populates='transitions')
+    user = relationship('User', back_populates='transitions')
+
+    url_id = Column(Integer, ForeignKey('urls.id', ondelete='CASCADE'))
+    user_id = Column(
+        Integer,
+        ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=True
+    )
