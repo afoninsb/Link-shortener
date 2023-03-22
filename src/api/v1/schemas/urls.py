@@ -16,12 +16,8 @@ class UrlBase(BaseModel):
     is_deleted: bool
 
 
-
-# class UrlUpdate(BaseModel):
-#     id: int
-#     short: str
-#     is_private: bool
-#     is_deleted: bool
+class UrlIsPrivate(BaseModel):
+    is_private: bool
 
 
 # class UrlInDBBase(BaseModel):

@@ -35,7 +35,8 @@ async def get_user(username: str, db: AsyncSession):
 
 async def authenticate_user(username: str, password: str, db: AsyncSession):
     user = await get_user(username, db)
-    return user if await verify_password(password, user.hashed_password) else False
+    return user if await verify_password(
+        password, user.hashed_password) else False
 
 
 async def create_access_token(
@@ -58,7 +59,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
                            db: AsyncSession = Depends(get_session)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -71,8 +71,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
         if username is None:
             raise credentials_exception
         token_data = users_schemas.TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
+    except JWTError as e:
+        raise credentials_exception from e
     user = await get_user(token_data.username, db)
     if user is None:
         raise credentials_exception

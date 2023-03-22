@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from api.v1.schemas import urls as urls_schemas
 from db.models import Url
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,5 +30,26 @@ async def create_url(
 
 async def get_url(url_id: int, db: AsyncSession,):
     """ Возвращает информацию о пользователе """
-    results = await db.execute(select(Url).where(Url.id == url_id))
-    return results.scalar_one_or_none()
+    url = await db.execute(select(Url).where(Url.id == url_id))
+    return url.scalar_one_or_none()
+
+
+async def del_url(url_id: int, db: AsyncSession,):
+    """ Возвращает информацию о пользователе """
+    url = await db.execute(update(Url).where(Url.id == url_id).values(
+        is_deleted=True))
+    await db.commit()
+    url = await db.execute(select(Url).where(Url.id == url_id))
+    return url.scalar_one_or_none()
+
+
+async def is_private_url(url_id: int,
+                         obj_in: urls_schemas.UrlIsPrivate,
+                         db: AsyncSession,):
+    """ Возвращает информацию о пользователе """
+    obj_in_data = jsonable_encoder(obj_in)
+    url = await db.execute(update(Url).where(Url.id == url_id).values(
+        is_private=obj_in_data['is_private']))
+    await db.commit()
+    url = await db.execute(select(Url).where(Url.id == url_id))
+    return url.scalar_one_or_none()
