@@ -13,6 +13,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class AppSettings(BaseSettings):
     app_title: str = 'library'
     database_dsn: PostgresDsn
+    short_url: str
+    secret_key: str
+    algorithm: str
+    access_token_expire_minutes: int
     black_list: Tuple[str, ...] = ('123.34.234.23',)
 
     class Config:

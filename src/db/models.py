@@ -28,6 +28,8 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
+    username = Column(String(16), unique=True, nullable=False)
+    hashed_password = Column(String(128), nullable=False)
 
     urls = relationship('Url', back_populates='user')
     transitions = relationship('Transition', back_populates='user')
@@ -39,7 +41,7 @@ class Transition(Base):
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, index=True, default=datetime.utcnow)
 
-    url = relationship('URL', back_populates='transitions')
+    url = relationship('Url', back_populates='transitions')
     user = relationship('User', back_populates='transitions')
 
     url_id = Column(Integer, ForeignKey('urls.id', ondelete='CASCADE'))

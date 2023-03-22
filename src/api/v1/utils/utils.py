@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Request, Header, HTTPException, status
 
 from core.config import app_settings
@@ -40,3 +41,14 @@ async def check_allowed_ip(request: Request):
 
     if is_ip_banned(request.headers):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+
+ALPHABET = '1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM'
+ALPHABET_LENGTH = len(ALPHABET)
+
+
+def to_short_id(n: int) -> str:
+    if n < ALPHABET_LENGTH:
+        return ALPHABET[n]
+
+    return to_short_id(n // ALPHABET_LENGTH) + ALPHABET[n % ALPHABET_LENGTH]

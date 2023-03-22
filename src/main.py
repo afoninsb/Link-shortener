@@ -2,8 +2,8 @@ from fastapi import FastAPI, Depends
 from fastapi.responses import ORJSONResponse
 
 from core.config import app_settings
-from api.v1 import urls
-from api.v1.utils import check_allowed_ip
+from api.v1.routers import urls, users
+# from api.v1.utils import check_allowed_ip
 
 
 app = FastAPI(
@@ -15,3 +15,4 @@ app = FastAPI(
 )
 
 app.include_router(urls.router, prefix='/api/v1')
+app.include_router(users.router, prefix='/api/v1')
