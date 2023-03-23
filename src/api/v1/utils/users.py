@@ -1,46 +1,54 @@
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import Depends, HTTPException, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.schemas import users as users_schemas
 from core.config import app_settings
-from db.models import User
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy.ext.asyncio import AsyncSession
 from db.db import get_session
-
+from db.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 
-async def verify_password(plain_password, hashed_password):
+async def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Проверяем правильность введённого пароля."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
-async def get_password_hash(password):
+async def get_password_hash(password: str) -> str:
+    """Хешируем пароль."""
     return pwd_context.hash(password)
 
 
-async def get_user(username: str, db: AsyncSession):
+async def get_user(username: str, db: AsyncSession) -> User:
+    """Возвращаем информацию о пользователе."""
     user = await db.execute(select(User).where(User.username == username))
     return user.scalar_one_or_none()
 
 
-async def authenticate_user(username: str, password: str, db: AsyncSession):
+async def authenticate_user(username: str,
+                            password: str,
+                            db: AsyncSession
+                            ) -> User | bool:
+    """Аутентификация пользователя."""
     user = await get_user(username, db)
     return user if await verify_password(
         password, user.hashed_password) else False
 
 
-async def create_access_token(
-        data: dict, expires_delta: timedelta | None = None):
+async def create_access_token(data: dict,
+                              expires_delta:
+                              timedelta | None = None
+                              ) -> str:
+    """Получение токена авторизации."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -56,7 +64,9 @@ async def create_access_token(
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme),
-                           db: AsyncSession = Depends(get_session)):
+                           db: AsyncSession = Depends(get_session)
+                           ) -> dict[str, str | int] | None:
+    """Проверка наличия и правильности токена авториазции."""
     if not token:
         return None
     try:
@@ -76,21 +86,23 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
 
 
 async def unauthorized(token: str = Depends(oauth2_scheme),
-                       db: AsyncSession = Depends(get_session)):
+                       db: AsyncSession = Depends(get_session)
+                       ) -> Any:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         headers={"WWW-Authenticate": "Bearer"},
     )
+    """Если токена нет или не верен, вызываем 401_UNAUTHORIZED."""
     user = await get_current_user(token, db)
     if not user:
         raise credentials_exception
     return user
 
 
-async def create_user(
-    obj_in: users_schemas.UserAuth, db: AsyncSession
-):
-    """ Создает нового пользователя в БД """
+async def create_user(obj_in: users_schemas.UserAuth,
+                      db: AsyncSession
+                      ) -> User:
+    """Создает нового пользователя в БД."""
     obj_in_data = jsonable_encoder(obj_in)
     hashed_password = await get_password_hash(obj_in_data['password'])
     db_obj = User(

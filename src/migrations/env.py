@@ -1,12 +1,9 @@
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import AsyncEngine
-
 from alembic import context
-
+from sqlalchemy import engine_from_config, pool
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 # from pathlib import Path
 # from dotenv import load_dotenv
@@ -17,6 +14,7 @@ from alembic import context
 config = context.config
 
 from core.config import app_settings
+
 config.set_main_option('sqlalchemy.url', app_settings.database_dsn)
 
 # Interpret the config file for Python logging.
@@ -29,7 +27,7 @@ fileConfig(config.config_file_name)
 # target_metadata = None
 
 from db.db import Base
-from db.models import Url, User, Transition
+from db.models import Transition, Url, User
 
 target_metadata = Base.metadata
 

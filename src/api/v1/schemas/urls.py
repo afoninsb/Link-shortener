@@ -1,6 +1,9 @@
-from typing import List, Union
-from pydantic import BaseModel, ValidationError, validator
 from datetime import datetime
+from typing import List, Union
+
+from pydantic import BaseModel
+
+from api.v1.schemas import users as users_schemas
 
 
 class UrlCreate(BaseModel):
@@ -24,10 +27,10 @@ class UrlIsPrivate(BaseModel):
 
 class Transitions(BaseModel):
     date: datetime
-    user_id: int | None
+    user: users_schemas.UserOut | None
 
 
-class UrlStatus(BaseModel):
-    id: int
-    count: int
-    transitions: Union[List[Transitions], None] = None
+# class UrlStatus(BaseModel):
+#     id: int
+#     # count: int
+#     transitions: Union[Transitions, None] = None

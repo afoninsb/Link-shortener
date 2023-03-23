@@ -1,7 +1,9 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from datetime import datetime
-from db.db import Base
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from db.db import Base
 
 
 class Url(Base):
