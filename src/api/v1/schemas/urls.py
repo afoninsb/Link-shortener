@@ -30,9 +30,14 @@ class Transitions(BaseModel):
     user_id: int | None
 
 
-class UrlStatus(BaseModel):
+class TransistionsList(BaseModel):
     total: int
     pages: int
     page: int
     size: int
-    transitions: List[Union[Transitions, None]] = None
+    items: List[Union[Transitions, None]] = None
+
+
+class UrlStatus(BaseModel):
+    id: int
+    transitions: TransistionsList

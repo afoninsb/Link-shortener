@@ -1,9 +1,7 @@
 from typing import Any, Dict, List
-from fastapi import Depends, Header, HTTPException, Request, status
+from fastapi import HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 
-from api.v1.schemas import users as users_schemas
 from core.config import app_settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -18,7 +16,7 @@ class Paginator:
         return (f'{self.__class__.__name__}: offset: {self.offset}, '
                 f'limit: {self.limit}')
 
-    def paginate(self, content: List[Any]) -> Dict[str, int | Any]:
+    def paginate(self, content: List[Any]) -> Dict[str, int | List[Any]]:
         length = len(content)
         if length % self.size == 0:
             pages = length // self.size
@@ -31,7 +29,7 @@ class Paginator:
             'pages': pages,
             'page': self.page,
             'size': self.size,
-            'transitions': content[start: end]
+            'items': content[start: end]
         }
 
 

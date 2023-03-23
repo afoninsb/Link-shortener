@@ -11,7 +11,6 @@ from api.v1.utils import urls as urls_utils
 from api.v1.utils import users as users_utils
 from db.db import get_session
 from db.models import Url, User
-from fastapi_pagination import Page, paginate
 
 router = APIRouter()
 
@@ -71,7 +70,6 @@ async def get_url_status(url_id: int,
     """Статус ссылки."""
     params = {'page': page, 'size': size} if full_info else {}
     url_info = await urls_utils.status_url(url_id, db=db, params=params)
-    print(url_info)
     # result = {
     #     'id': url_id,
     #     'count': url_info['count'],
@@ -79,7 +77,8 @@ async def get_url_status(url_id: int,
     # if full_info:
     #     result['transitions'] = url_info['transitions']
     # return paginate(url_info)
-    return url_info
+    print({'id': url_id, 'transitions': url_info})
+    return {'id': url_id, 'transitions': url_info}
 
 
 @router.post('/{url_id}/delete/',

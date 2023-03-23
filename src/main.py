@@ -1,6 +1,5 @@
 from fastapi import Depends, FastAPI
 from fastapi.responses import ORJSONResponse
-from fastapi_pagination import add_pagination
 
 from api.v1.routers import urls, users
 from core.config import app_settings
@@ -18,5 +17,3 @@ app = FastAPI(
 
 app.include_router(urls.router, prefix='/api/v1')
 app.include_router(users.router, prefix='/api/v1')
-
-add_pagination(app)
