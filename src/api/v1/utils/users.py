@@ -17,7 +17,7 @@ from db.db import get_session
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 
 async def verify_password(plain_password, hashed_password):
@@ -57,10 +57,8 @@ async def create_access_token(
 
 async def get_current_user(token: str = Depends(oauth2_scheme),
                            db: AsyncSession = Depends(get_session)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    if not token:
+        return None
     try:
         payload = jwt.decode(
             token,
@@ -69,14 +67,24 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
         )
         username: str = payload.get("sub")
         if username is None:
-            raise credentials_exception
+            return None
         token_data = users_schemas.TokenData(username=username)
-    except JWTError as e:
-        raise credentials_exception from e
+    except JWTError:
+        return None
     user = await get_user(token_data.username, db)
-    if user is None:
+    return None if user is None else jsonable_encoder(user)
+
+
+async def unauthorized(token: str = Depends(oauth2_scheme),
+                       db: AsyncSession = Depends(get_session)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    user = await get_current_user(token, db)
+    if not user:
         raise credentials_exception
-    return jsonable_encoder(user)
+    return user
 
 
 async def create_user(

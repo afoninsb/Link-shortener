@@ -44,7 +44,7 @@ async def login_for_access_token(
 
 @router.get("/users/me/", response_model=users_schemas.UserOut)
 async def read_users_me(
-    current_user: User = Depends(users_utils.get_current_user),
+    current_user: User = Depends(users_utils.unauthorized),
 ):
     return current_user
 

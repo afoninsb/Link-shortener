@@ -1,4 +1,6 @@
+from typing import List, Union
 from pydantic import BaseModel, ValidationError, validator
+from datetime import datetime
 
 
 class UrlCreate(BaseModel):
@@ -20,17 +22,12 @@ class UrlIsPrivate(BaseModel):
     is_private: bool
 
 
-# class UrlInDBBase(BaseModel):
-#     id: int
-#     description: str
-#     original: str
-#     is_private: bool
-#     is_deleted: bool
-#     created_at: datetime
-
-#     class Config:
-#         orm_mode = True
+class Transitions(BaseModel):
+    datetime: datetime
+    user_id: int
 
 
-# class Url(UrlInDBBase):
-#     short: str
+class UrlStatus(BaseModel):
+    id: int
+    count: int
+    transitions: Union[List[Transitions], None] = None
