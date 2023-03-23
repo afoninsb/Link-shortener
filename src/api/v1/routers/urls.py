@@ -55,7 +55,7 @@ async def get_url(
             response_model=urls_schema.UrlStatus,
             status_code=status.HTTP_200_OK
             )
-async def get_url_info(
+async def get_url_status(
     url_id: int,
     full_info: bool | None = None,
     offset: int | None = 0,
@@ -66,11 +66,15 @@ async def get_url_info(
     """
     Create new url.
     """
-    params = {}
+    params = {'offset': offset, 'limit': limit} if full_info else {}
+    url_info = await urls_utils.status_url(url_id, db=db, params=params)
+    result = {
+        'id': url_id,
+        'count': url_info['count'],
+    }
     if full_info:
-        params = {'offset': offset, 'limit': limit}
-    url_info = await urls_utils.status_url(current_url, db, params)
-    return jsonable_encoder(url_info)
+        result['transitions'] = url_info['transitions']
+    return result
 
 
 @router.post('/{url_id}/delete/',

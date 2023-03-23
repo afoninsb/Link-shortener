@@ -23,8 +23,8 @@ class UrlIsPrivate(BaseModel):
 
 
 class Transitions(BaseModel):
-    datetime: datetime
-    user_id: int
+    date: datetime
+    user_id: int | None
 
 
 class UrlStatus(BaseModel):

@@ -86,8 +86,25 @@ async def get_url_info(url_id: int,
         status_code=status.HTTP_404_NOT_FOUND,
     )
     """ Возвращает информацию о пользователе """
-    url = (await db.execute(select(Url).where(Url.id == url_id)))
+    url = await db.execute(select(Url).where(Url.id == url_id))
     if url := url.scalar_one_or_none():
         return url
     else:
         raise not_found_exception
+
+
+async def status_url(url_id: int,
+                     params: dict[str, int],
+                     db: AsyncSession = Depends(get_session),
+                     ):
+    """ Возвращает информацию о пользователе """
+    transitions = await db.execute(
+        select(Transition).where(Transition.url_id == url_id)
+    )
+    transitions_schema = [
+        jsonable_encoder(tr) for tr in transitions.scalars()
+    ]
+    return {
+        'count': len(transitions_schema),
+        'transitions': transitions_schema
+    }
