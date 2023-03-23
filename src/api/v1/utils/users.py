@@ -55,7 +55,7 @@ async def create_access_token(data: dict,
     else:
         expire = datetime.utcnow() + timedelta(
             minutes=app_settings.access_token_expire_minutes)
-    to_encode.update({"exp": expire})
+    to_encode["exp"] = expire
     return jwt.encode(
         to_encode,
         app_settings.secret_key,

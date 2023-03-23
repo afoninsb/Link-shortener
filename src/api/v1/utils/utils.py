@@ -1,3 +1,4 @@
+from typing import Any, Dict, List
 from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -9,13 +10,29 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 class Paginator:
-    def __init__(self, offset: int = 0, limit: int = 10):
-        self.offset = offset
-        self.limit = limit
+    def __init__(self, page: int = 0, size: int = 10):
+        self.page = page
+        self.size = size
 
     def __str__(self):
         return (f'{self.__class__.__name__}: offset: {self.offset}, '
                 f'limit: {self.limit}')
+
+    def paginate(self, content: List[Any]) -> Dict[str, int | Any]:
+        length = len(content)
+        if length % self.size == 0:
+            pages = length // self.size
+        else:
+            pages = (length // self.size) + 1
+        start = (self.page - 1) * self.size + 1
+        end = self.page * self.size + 1
+        return {
+            'total': length,
+            'pages': pages,
+            'page': self.page,
+            'size': self.size,
+            'transitions': content[start: end]
+        }
 
 
 async def check_allowed_ip(request: Request):

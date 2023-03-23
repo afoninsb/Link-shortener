@@ -27,10 +27,12 @@ class UrlIsPrivate(BaseModel):
 
 class Transitions(BaseModel):
     date: datetime
-    user: users_schemas.UserOut | None
+    user_id: int | None
 
 
-# class UrlStatus(BaseModel):
-#     id: int
-#     # count: int
-#     transitions: Union[Transitions, None] = None
+class UrlStatus(BaseModel):
+    total: int
+    pages: int
+    page: int
+    size: int
+    transitions: List[Union[Transitions, None]] = None

@@ -55,7 +55,7 @@ async def get_url(db: AsyncSession = Depends(get_session),
 
 
 @router.get('/{url_id}/status',
-            response_model=Page[urls_schema.Transitions],
+            response_model=urls_schema.UrlStatus,
             status_code=status.HTTP_200_OK,
             responses={
                 404: {"description": "Такой url не существует"},
@@ -69,15 +69,17 @@ async def get_url_status(url_id: int,
                          current_url: Url = Depends(urls_utils.get_url_info)
                          ) -> Any:
     """Статус ссылки."""
-    params = {'offset': page, 'limit': size} if full_info else {}
+    params = {'page': page, 'size': size} if full_info else {}
     url_info = await urls_utils.status_url(url_id, db=db, params=params)
+    print(url_info)
     # result = {
     #     'id': url_id,
     #     'count': url_info['count'],
     # }
     # if full_info:
     #     result['transitions'] = url_info['transitions']
-    return paginate(url_info)
+    # return paginate(url_info)
+    return url_info
 
 
 @router.post('/{url_id}/delete/',

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.schemas import urls as urls_schemas
-from api.v1.utils.utils import to_short_id
+from api.v1.utils.utils import to_short_id, Paginator
 from core.config import app_settings
 from db.db import get_session
 from db.models import Transition, Url
@@ -103,7 +103,9 @@ async def status_url(url_id: int,
     # for a in transitions.scalars():
     #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!", jsonable_encoder(a))
 
-    return [jsonable_encoder(tr) for tr in transitions.scalars()]
+    transitions = [jsonable_encoder(tr) for tr in transitions.scalars()]
+    paginator = Paginator(page=params['page'], size=params['size'])
+    return paginator.paginate(transitions)
     # return {
     #     'count': len(transitions_schema),
     #     'transitions': transitions_schema
