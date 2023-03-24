@@ -15,6 +15,29 @@ from db.models import User
 router = APIRouter()
 
 
+@router.post('/signup',
+             summary="Create new user",
+             response_model=users_schemas.UserOut,
+             status_code=status.HTTP_201_CREATED,
+             responses={
+                 400: {"description": "Username уже существует"},
+             }
+             )
+async def create_user(
+    data: users_schemas.UserAuth,
+    db: AsyncSession = Depends(get_session)
+) -> Any:
+    """Регистрация пользователя."""
+    user = await users_utils.get_user(data.username, db)
+    if user is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username уже существует"
+        )
+    new_user = await users_utils.create_user(data, db)
+    return jsonable_encoder(new_user)
+
+
 @router.post("/login",
              response_model=users_schemas.Token,
              responses={
@@ -42,8 +65,9 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/users/me/",
+@router.get("/user/me",
             response_model=users_schemas.UserOut,
+            status_code=status.HTTP_200_OK,
             responses={
                 401: {"description": "Не авторизован"},
             }
@@ -55,24 +79,25 @@ async def user_me(
     return current_user
 
 
-@router.post('/signup',
-             summary="Create new user",
-             response_model=users_schemas.UserOut,
-             status_code=status.HTTP_201_CREATED,
-             responses={
-                 400: {"description": "Username уже существует"},
-             }
-             )
-async def create_user(
-    data: users_schemas.UserAuth,
-    db: AsyncSession = Depends(get_session)
+@router.get('/user/status',
+            response_model=users_schemas.UserStatus,
+            status_code=status.HTTP_200_OK,
+            responses={
+                401: {"description": "Не авторизован"},
+            }
+            )
+async def get_user_status(
+    page: int | None = 0,
+    size: int | None = 10,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(users_utils.unauthorized),
 ) -> Any:
-    """Регистрация пользователя."""
-    user = await users_utils.get_user(data.username, db)
-    if user is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username уже существует"
-        )
-    new_user = await users_utils.create_user(data, db)
-    return jsonable_encoder(new_user)
+    """Статус пользователя."""
+    print(1111111111111111111111111111)
+    params = {'page': page, 'size': size} if page and size else {}
+    return await users_utils.status_user(
+        current_user,
+        db=db,
+        params=params
+
+    )

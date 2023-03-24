@@ -35,7 +35,7 @@ async def create_url(url_in: urls_schema.UrlCreate,
     return jsonable_encoder(new_url)
 
 
-@router.get('/{url_id}/',
+@router.get('/{url_id}',
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
             responses={
                 410: {"description": "Этот url удалён"},
@@ -70,18 +70,10 @@ async def get_url_status(url_id: int,
     """Статус ссылки."""
     params = {'page': page, 'size': size} if full_info else {}
     url_info = await urls_utils.status_url(url_id, db=db, params=params)
-    # result = {
-    #     'id': url_id,
-    #     'count': url_info['count'],
-    # }
-    # if full_info:
-    #     result['transitions'] = url_info['transitions']
-    # return paginate(url_info)
-    print({'id': url_id, 'transitions': url_info})
     return {'id': url_id, 'transitions': url_info}
 
 
-@router.post('/{url_id}/delete/',
+@router.post('/{url_id}/delete',
              response_model=urls_schema.UrlBase,
              status_code=status.HTTP_200_OK,
              responses={

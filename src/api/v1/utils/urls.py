@@ -97,16 +97,19 @@ async def status_url(url_id: int,
                      db: AsyncSession = Depends(get_session),
                      ):
     """Возвращаем информацию о переходах по ссылке."""
-    transitions = await db.execute(
-        select(Transition).where(Transition.url_id == url_id)  # .join(Transition.user)
-    )
-    # for a in transitions.scalars():
-    #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!", jsonable_encoder(a))
-
-    transitions = [jsonable_encoder(tr) for tr in transitions.scalars()]
+    transitions = (await db.execute(
+        select(Transition).where(Transition.url_id == url_id)
+    )).scalars().all()
+    if not params:
+        return {
+            'total': len(transitions),
+            'pages': 1,
+            'size': len(transitions),
+            'page': 1,
+            'items': transitions
+        }
     paginator = Paginator(page=params['page'], size=params['size'])
+    # a = (await db.execute(select(Transition).where(Transition.url_id == url_id).join(Transition.user))).scalars().all()
+    # for b in a:
+    #     print(jsonable_encoder(b))
     return paginator.paginate(transitions)
-    # return {
-    #     'count': len(transitions_schema),
-    #     'transitions': transitions_schema
-    # }

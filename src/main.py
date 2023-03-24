@@ -15,5 +15,5 @@ app = FastAPI(
     # dependencies=[Depends(check_allowed_ip)]
 )
 
-app.include_router(urls.router, prefix='/api/v1')
 app.include_router(users.router, prefix='/api/v1')
+app.include_router(urls.router, prefix='/api/v1')

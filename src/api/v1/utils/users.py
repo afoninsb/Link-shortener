@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.v1.schemas import users as users_schemas
 from core.config import app_settings
 from db.db import get_session
-from db.models import User
+from db.models import Url, User
+from api.v1.utils.utils import Paginator
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
@@ -113,3 +114,23 @@ async def create_user(obj_in: users_schemas.UserAuth,
     await db.commit()
     await db.refresh(db_obj)
     return db_obj
+
+
+async def status_user(current_user: dict[str, str | int],
+                      params: dict[str, int],
+                      db: AsyncSession = Depends(get_session),
+                      ):
+    """Возвращаем информацию ссылках пользователя."""
+    urls = (await db.execute(
+        select(Url).where(Url.user_id == current_user['id'])
+    )).scalars().all()
+    if not params:
+        return {
+            'total': len(urls),
+            'pages': 1,
+            'size': len(urls),
+            'page': 1,
+            'items': urls
+        }
+    paginator = Paginator(page=params['page'], size=params['size'])
+    return paginator.paginate(urls)

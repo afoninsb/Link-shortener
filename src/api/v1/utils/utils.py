@@ -22,13 +22,13 @@ class Paginator:
             pages = length // self.size
         else:
             pages = (length // self.size) + 1
-        start = (self.page - 1) * self.size + 1
-        end = self.page * self.size + 1
+        start = (self.page - 1) * self.size
+        end = self.page * self.size
         return {
             'total': length,
             'pages': pages,
-            'page': self.page,
             'size': self.size,
+            'page': self.page,
             'items': content[start: end]
         }
 

@@ -3,8 +3,6 @@ from typing import List, Union
 
 from pydantic import BaseModel
 
-from api.v1.schemas import users as users_schemas
-
 
 class UrlCreate(BaseModel):
     original: str
@@ -20,6 +18,9 @@ class UrlBase(BaseModel):
     is_private: bool
     is_deleted: bool
 
+    class Config:
+        orm_mode = True
+
 
 class UrlIsPrivate(BaseModel):
     is_private: bool
@@ -29,13 +30,19 @@ class Transitions(BaseModel):
     date: datetime
     user_id: int | None
 
+    class Config:
+        orm_mode = True
+
 
 class TransistionsList(BaseModel):
     total: int
     pages: int
-    page: int
     size: int
+    page: int
     items: List[Union[Transitions, None]] = None
+
+    class Config:
+        orm_mode = True
 
 
 class UrlStatus(BaseModel):
