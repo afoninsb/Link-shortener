@@ -36,11 +36,11 @@ async def create_url(obj_in: urls_schemas.UrlCreate,
     return db_obj
 
 
-async def save_transition(url: Url,
-                          db: AsyncSession,
-                          user: dict[str, Union[str, int]] | None
-                          ) -> None:
-    """Сохранение информации о переходе."""
+async def get_url(url: Url,
+                  db: AsyncSession,
+                  user: dict[str, Union[str, int]] | None
+                  ) -> Url:
+    """Оформляем переход по ссылке."""
     user_id = user['id'] if user else None
     db_obj = Transition(
         url_id=url.id,
@@ -48,16 +48,6 @@ async def save_transition(url: Url,
     )
     db.add(db_obj)
     await db.commit()
-
-
-async def get_url(url_id: int,
-                  db: AsyncSession,
-                  user: dict[str, Union[str, int]] | None
-                  ) -> Url:
-    """Оформляем переход по ссылке."""
-    url = await db.execute(select(Url).where(Url.id == url_id))
-    url = url.scalar_one_or_none()
-    await save_transition(url, db, user)
     return url
 
 
@@ -97,6 +87,9 @@ async def status_url(url_id: int,
                      db: AsyncSession = Depends(get_session),
                      ):
     """Возвращаем информацию о переходах по ссылке."""
+    # a = (await db.execute(select(Transition).where(Transition.url_id == url_id).join(Transition.user))).scalars().all()
+    # for b in a:
+    #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!", jsonable_encoder(b))
     transitions = (await db.execute(
         select(Transition).where(Transition.url_id == url_id)
     )).scalars().all()
@@ -109,7 +102,4 @@ async def status_url(url_id: int,
             'items': transitions
         }
     paginator = Paginator(page=params['page'], size=params['size'])
-    # a = (await db.execute(select(Transition).where(Transition.url_id == url_id).join(Transition.user))).scalars().all()
-    # for b in a:
-    #     print(jsonable_encoder(b))
     return paginator.paginate(transitions)

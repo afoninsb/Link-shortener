@@ -49,6 +49,7 @@ async def get_url(db: AsyncSession = Depends(get_session),
     """Получение короткой ссылки - переход."""
     if current_url.is_deleted:
         raise HTTPException(status_code=410, detail="Этот url удалён")
+    await urls_utils.get_url(current_url, db, current_user)
     headers = {'Location': current_url.original}
     return JSONResponse(content='', headers=headers, status_code=307)
 
