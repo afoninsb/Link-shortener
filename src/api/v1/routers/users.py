@@ -93,11 +93,9 @@ async def get_user_status(
     current_user: User = Depends(users_utils.unauthorized),
 ) -> Any:
     """Статус пользователя."""
-    print(1111111111111111111111111111)
     params = {'page': page, 'size': size} if page and size else {}
     return await users_utils.status_user(
         current_user,
         db=db,
         params=params
-
     )

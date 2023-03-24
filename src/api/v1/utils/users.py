@@ -10,10 +10,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.schemas import users as users_schemas
+from api.v1.utils.utils import Paginator
 from core.config import app_settings
 from db.db import get_session
 from db.models import Url, User
-from api.v1.utils.utils import Paginator
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
@@ -120,7 +120,7 @@ async def status_user(current_user: dict[str, str | int],
                       params: dict[str, int],
                       db: AsyncSession = Depends(get_session),
                       ):
-    """Возвращаем информацию ссылках пользователя."""
+    """Возвращаем информацию о ссылках пользователя."""
     urls = (await db.execute(
         select(Url).where(Url.user_id == current_user['id'])
     )).scalars().all()

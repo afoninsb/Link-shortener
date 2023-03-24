@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.schemas import urls as urls_schemas
-from api.v1.utils.utils import to_short_id, Paginator
+from api.v1.utils.utils import Paginator, to_short_id
 from core.config import app_settings
 from db.db import get_session
 from db.models import Transition, Url

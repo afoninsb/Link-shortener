@@ -1,5 +1,7 @@
 from typing import List, Union
+
 from pydantic import BaseModel
+
 from api.v1.schemas import urls as urls_schemas
 
 

@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - postgres_value:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    env_file:
+      - ./.env
+
+  web:
+    build: .
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; uvicorn main:app --host 0.0.0.0'
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+
+volumes:
+  postgres_value:
