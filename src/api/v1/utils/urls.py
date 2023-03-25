@@ -18,10 +18,7 @@ async def create_url(obj_in: urls_schemas.UrlCreate,
                      ) -> Url:
     """Сохранение новой ссылки."""
     max_id_obj = await db.execute(select(Url).order_by(-Url.id))
-    if max_id_obj := max_id_obj.first():
-        max_id = max_id_obj.Url.id + 1
-    else:
-        max_id = 1
+    max_id = max_id_obj.Url.id + 1 if (max_id_obj := max_id_obj.first()) else 1
     obj_in_data = jsonable_encoder(obj_in)
     db_obj = Url(**obj_in_data)
     db_obj.short = f'{app_settings.short_url}{to_short_id(max_id)}'
@@ -51,8 +48,15 @@ async def get_url(url: Url,
     return url
 
 
-async def del_url(url: Url, db: AsyncSession,) -> Url:
+async def del_url(url: Url,
+                  db: AsyncSession,
+                  current_user: dict[str, str | int] | None
+                  ) -> Url:
     """Отмечаем ссылку удалённой."""
+    if not url.user_id or current_user['id'] != url.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
     url.is_deleted = True
     await db.commit()
     return url
@@ -60,8 +64,14 @@ async def del_url(url: Url, db: AsyncSession,) -> Url:
 
 async def is_private_url(url: Url,
                          obj_in: urls_schemas.UrlIsPrivate,
-                         db: AsyncSession) -> Url:
+                         db: AsyncSession,
+                         current_user: dict[str, str | int] | None
+                         ) -> Url:
     """Меняем видимость ссылки."""
+    if not url.user_id or current_user['id'] != url.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
     obj_in_data = jsonable_encoder(obj_in)
     url.is_private = obj_in_data['is_private']
     await db.commit()
@@ -99,7 +109,7 @@ async def status_url(url_id: int,
             'pages': 1,
             'size': len(transitions),
             'page': 1,
-            'items': transitions
+            'items': []
         }
     paginator = Paginator(page=params['page'], size=params['size'])
     return paginator.paginate(transitions)

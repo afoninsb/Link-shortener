@@ -1,10 +1,26 @@
+from pydantic import PostgresDsn
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from core.config import app_settings
 
-Base = declarative_base()
-engine = create_async_engine(app_settings.database_dsn, echo=True, future=True)
+if app_settings.testing:
+    db_name = "test_db"
+    database_dsn: PostgresDsn = (
+        f'postgresql+asyncpg://{app_settings.db_user}:'
+        f'{app_settings.db_password}@{app_settings.db_host}'
+        f':{app_settings.db_port}/{db_name}'
+    )
+    engine = create_async_engine(database_dsn, echo=False, future=True)
+else:
+    database_dsn: PostgresDsn = (
+        f'postgresql+asyncpg://{app_settings.db_user}:'
+        f'{app_settings.db_password}@{app_settings.db_host}'
+        f':{app_settings.db_port}/{app_settings.db}'
+    )
+    engine = create_async_engine(database_dsn, echo=True, future=True)
+
+
 async_session = sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )

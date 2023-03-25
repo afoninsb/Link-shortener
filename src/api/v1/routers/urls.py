@@ -63,7 +63,7 @@ async def get_url(db: AsyncSession = Depends(get_session),
             )
 async def get_url_status(url_id: int,
                          full_info: bool | None = None,
-                         page: int | None = 0,
+                         page: int | None = 1,
                          size: int | None = 10,
                          db: AsyncSession = Depends(get_session),
                          current_url: Url = Depends(urls_utils.get_url_info)
@@ -76,7 +76,7 @@ async def get_url_status(url_id: int,
 
 @router.post('/{url_id}/delete',
              response_model=urls_schema.UrlBase,
-             status_code=status.HTTP_200_OK,
+             status_code=status.HTTP_201_CREATED,
              responses={
                  404: {"description": "Такой url не существует"},
              }
@@ -87,23 +87,30 @@ async def del_url(url_id: int,
                   current_url: Url = Depends(urls_utils.get_url_info)
                   ) -> Any:
     """Удаление ссылки."""
-    url = await urls_utils.del_url(current_url, db)
+    url = await urls_utils.del_url(current_url, db, current_user)
     return jsonable_encoder(url)
 
 
-@router.post('/{url_id}/is_private/',
+@router.post('/{url_id}/is_private',
              response_model=urls_schema.UrlBase,
              status_code=status.HTTP_201_CREATED,
              responses={
+                 403: {"description": "Вы не можете редактировать этот url"},
                  404: {"description": "Такой url не существует"},
              }
              )
-async def is_private_url(url_id: int,
-                         url_in: urls_schema.UrlIsPrivate,
-                         db: AsyncSession = Depends(get_session),
-                         current_user: User = Depends(users_utils.unauthorized),
-                         current_url: Url = Depends(urls_utils.get_url_info)
-                         ) -> Any:
+async def is_private_url(
+    url_id: int,
+    url_in: urls_schema.UrlIsPrivate,
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(users_utils.unauthorized),
+    current_url: Url = Depends(urls_utils.get_url_info)
+) -> Any:
     """Изменение видимости ссылки."""
-    url = await urls_utils.is_private_url(current_url, url_in, db)
+    url = await urls_utils.is_private_url(
+        current_url,
+        url_in,
+        db,
+        current_user
+    )
     return jsonable_encoder(url)

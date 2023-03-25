@@ -18,10 +18,6 @@ class User(BaseModel):
     username: str
 
 
-class UserInDB(User):
-    hashed_password: str
-
-
 class UserAuth(User):
     password: str
 

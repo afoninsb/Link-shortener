@@ -15,8 +15,7 @@ from db.models import User
 router = APIRouter()
 
 
-@router.post('/signup',
-             summary="Create new user",
+@router.post('/user/signup',
              response_model=users_schemas.UserOut,
              status_code=status.HTTP_201_CREATED,
              responses={
@@ -38,8 +37,9 @@ async def create_user(
     return jsonable_encoder(new_user)
 
 
-@router.post("/login",
+@router.post("/user/login",
              response_model=users_schemas.Token,
+             status_code=status.HTTP_200_OK,
              responses={
                  401: {"description": "Не авторизован"},
              }

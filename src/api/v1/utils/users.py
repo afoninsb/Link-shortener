@@ -41,8 +41,9 @@ async def authenticate_user(username: str,
                             ) -> User | bool:
     """Аутентификация пользователя."""
     user = await get_user(username, db)
-    return user if await verify_password(
-        password, user.hashed_password) else False
+    if user and verify_password(password, user.hashed_password):
+        return user
+    return False
 
 
 async def create_access_token(data: dict,
