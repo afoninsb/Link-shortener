@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from api.v1.schemas import urls as urls_schemas
 from api.v1.utils.utils import Paginator, to_short_id
@@ -97,13 +98,10 @@ async def status_url(url_id: int,
                      db: AsyncSession = Depends(get_session),
                      ):
     """Возвращаем информацию о переходах по ссылке."""
-    # a = (await db.execute(select(Transition).where(
-    # Transition.url_id == url_id).join(Transition.user))).scalars().all()
-    # for b in a:
-    #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!", jsonable_encoder(b))
-    transitions = (await db.execute(
-        select(Transition).where(Transition.url_id == url_id)
-    )).scalars().all()
+    transitions = (await db.execute(select(Transition).where(
+        Transition.url_id == url_id).options(
+        joinedload(Transition.user)))
+    ).scalars().all()
     if not params:
         return {
             'total': len(transitions),

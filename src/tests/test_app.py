@@ -159,8 +159,8 @@ async def test_app(client: AsyncClient, create_db, user_data, urls_data):
     data = response.json()
     assert data['id'] == 1
     assert data['transitions']['total'] == 2
-    assert data['transitions']['items'][0]['user_id'] == 1
-    assert data['transitions']['items'][1]['user_id'] is None
+    assert data['transitions']['items'][0]['user']['id'] == 1
+    assert data['transitions']['items'][1]['user'] is None
 
 
 @pytest.mark.asyncio()

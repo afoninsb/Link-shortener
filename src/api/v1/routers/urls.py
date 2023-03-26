@@ -37,7 +37,7 @@ async def create_url(url_in: urls_schema.UrlCreate,
     try:
         new_url = await urls_utils.create_url(url_in, db, current_user)
     except IntegrityError as e:
-        logger.info(f'Повторное создание ссылки {new_url.original}')
+        logger.info(f'Повторное создание ссылки {url_in.original}')
         raise HTTPException(
             status_code=400, detail="Такой url уже есть") from e
     logger.info(f'Создана ссылка {new_url.original} -> {new_url.short}')
