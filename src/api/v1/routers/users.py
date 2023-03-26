@@ -1,4 +1,6 @@
+import logging
 from datetime import timedelta
+from logging import config as logging_config
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,9 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.v1.schemas import users as users_schemas
 from api.v1.utils import users as users_utils
 from core.config import app_settings
+from core.logger import LOGGING
 from db.db import get_session
 from db.models import User
 
+logging_config.dictConfig(LOGGING)
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -34,6 +39,7 @@ async def create_user(
             detail="Username уже существует"
         )
     new_user = await users_utils.create_user(data, db)
+    logger.info(f'Зарегистрировался новый юзер {new_user.username}')
     return jsonable_encoder(new_user)
 
 
@@ -52,6 +58,7 @@ async def login_for_access_token(
     user = await users_utils.authenticate_user(
         form_data.username, form_data.password, db)
     if not user:
+        logger.info('Ошибочная авторизация')
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -62,6 +69,7 @@ async def login_for_access_token(
     access_token = await users_utils.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
+    logger.info(f'Авторизовался юзер {user.username}')
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -76,6 +84,7 @@ async def user_me(
     current_user: User = Depends(users_utils.unauthorized),
 ) -> Any:
     """Информация о текущем пользователе."""
+    logger.info(f'Запрошена информация о юзере {current_user["username"]}')
     return current_user
 
 
@@ -94,6 +103,7 @@ async def get_user_status(
 ) -> Any:
     """Статус пользователя."""
     params = {'page': page, 'size': size} if page and size else {}
+    logger.info(f'Запрошен стату юзера {current_user["username"]}')
     return await users_utils.status_user(
         current_user,
         db=db,

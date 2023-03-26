@@ -48,3 +48,8 @@ class TransistionsList(BaseModel):
 class UrlStatus(BaseModel):
     id: int
     transitions: TransistionsList
+
+
+class DBStatus(BaseModel):
+    status: str
+    code: int

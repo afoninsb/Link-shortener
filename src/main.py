@@ -10,7 +10,7 @@ app = FastAPI(
     docs_url='/api/openapi',
     openapi_url='/api/openapi.json',
     default_response_class=ORJSONResponse,
-    # dependencies=[Depends(check_allowed_ip)]
+    dependencies=[Depends(check_allowed_ip)]
 )
 
 app.include_router(users.router, prefix='/api/v1')

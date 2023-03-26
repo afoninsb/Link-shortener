@@ -1,4 +1,6 @@
-from typing import Any
+import logging
+from logging import config as logging_config
+from typing import Any, Dict, Union
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
@@ -9,8 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.v1.schemas import urls as urls_schema
 from api.v1.utils import urls as urls_utils
 from api.v1.utils import users as users_utils
+from core.config import app_settings
+from core.logger import LOGGING
 from db.db import get_session
 from db.models import Url, User
+
+logging_config.dictConfig(LOGGING)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -30,8 +37,10 @@ async def create_url(url_in: urls_schema.UrlCreate,
     try:
         new_url = await urls_utils.create_url(url_in, db, current_user)
     except IntegrityError as e:
+        logger.info(f'Повторное создание ссылки {new_url.original}')
         raise HTTPException(
             status_code=400, detail="Такой url уже есть") from e
+    logger.info(f'Создана ссылка {new_url.original} -> {new_url.short}')
     return jsonable_encoder(new_url)
 
 
@@ -48,9 +57,13 @@ async def get_url(db: AsyncSession = Depends(get_session),
                   ) -> Any:
     """Получение короткой ссылки - переход."""
     if current_url.is_deleted:
+        logger.info(f'Запрошена удаленная ссылка {current_url.original}')
         raise HTTPException(status_code=410, detail="Этот url удалён")
     await urls_utils.get_url(current_url, db, current_user)
     headers = {'Location': current_url.original}
+    logger.info(
+        f'Переход по ссылке {current_url.short} -> {current_url.original}'
+    )
     return JSONResponse(content='', headers=headers, status_code=307)
 
 
@@ -71,6 +84,7 @@ async def get_url_status(url_id: int,
     """Статус ссылки."""
     params = {'page': page, 'size': size} if full_info else {}
     url_info = await urls_utils.status_url(url_id, db=db, params=params)
+    logger.info(f'Запрошен статус ссылки {current_url.original}')
     return {'id': url_id, 'transitions': url_info}
 
 
@@ -88,6 +102,7 @@ async def del_url(url_id: int,
                   ) -> Any:
     """Удаление ссылки."""
     url = await urls_utils.del_url(current_url, db, current_user)
+    logger.info(f'Удалена ссылка {current_url.original}')
     return jsonable_encoder(url)
 
 
@@ -113,4 +128,22 @@ async def is_private_url(
         db,
         current_user
     )
+    logger.info(f'Изменена видимость ссылки {current_url.original}')
     return jsonable_encoder(url)
+
+
+@router.get('/db/ping',
+            response_model=urls_schema.DBStatus,
+            status_code=status.HTTP_200_OK,
+            )
+async def ping_db() -> Dict[str, Union[str, int]]:
+    """Статус базы данных."""
+    import os
+    cmd = f"pg_isready -h {app_settings.db_host} -p {app_settings.db_port}"
+    db = os.system(cmd)
+    logger.info(f'Пинг БД. Ответ {db}')
+    return (
+        {'status': 'OK', 'code': db}
+        if db == 0
+        else {'status': 'База данных не доступна!!!', 'code': db}
+    )

@@ -1,3 +1,4 @@
+import contextlib
 from typing import Any, Dict, List
 
 from fastapi import HTTPException, Request, status
@@ -37,13 +38,10 @@ class Paginator:
 async def check_allowed_ip(request: Request):
     def is_ip_banned(headers):
         is_banned = False
-        try:
+        with contextlib.suppress(KeyError):
             real_ip = headers["X-REAL-IP"]
             print(real_ip)
             is_banned = real_ip in app_settings.black_list
-        except KeyError:
-            print("IP header not found")
-            is_banned = True
         return is_banned
 
     if is_ip_banned(request.headers):

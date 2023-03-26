@@ -15,7 +15,7 @@ config = context.config
 
 from core.config import app_settings
 
-config.set_main_option('sqlalchemy.url', app_settings.database_dsn)
+config.set_main_option('sqlalchemy.url', 'postgresql+asyncpg://postgres:postgres@db/postgres')
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -26,8 +26,7 @@ fileConfig(config.config_file_name)
 # from myapp import mymodel
 # target_metadata = None
 
-from db.db import Base
-from db.models import Transition, Url, User
+from db.models import Base, Transition, Url, User
 
 target_metadata = Base.metadata
 

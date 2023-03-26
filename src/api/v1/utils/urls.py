@@ -97,7 +97,8 @@ async def status_url(url_id: int,
                      db: AsyncSession = Depends(get_session),
                      ):
     """Возвращаем информацию о переходах по ссылке."""
-    # a = (await db.execute(select(Transition).where(Transition.url_id == url_id).join(Transition.user))).scalars().all()
+    # a = (await db.execute(select(Transition).where(
+    # Transition.url_id == url_id).join(Transition.user))).scalars().all()
     # for b in a:
     #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!", jsonable_encoder(b))
     transitions = (await db.execute(

@@ -1,4 +1,6 @@
+import logging
 from datetime import datetime, timedelta
+from logging import config as logging_config
 from typing import Any
 
 from fastapi import Depends, HTTPException, status
@@ -12,8 +14,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.v1.schemas import users as users_schemas
 from api.v1.utils.utils import Paginator
 from core.config import app_settings
+from core.logger import LOGGING
 from db.db import get_session
 from db.models import Url, User
+
+logging_config.dictConfig(LOGGING)
+logger = logging.getLogger(__name__)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
@@ -41,8 +47,9 @@ async def authenticate_user(username: str,
                             ) -> User | bool:
     """Аутентификация пользователя."""
     user = await get_user(username, db)
-    if user and verify_password(password, user.hashed_password):
+    if user and await verify_password(password, user.hashed_password):
         return user
+    logger.info(f'Аутентификаwия не прошла {username}')
     return False
 
 
@@ -97,6 +104,7 @@ async def unauthorized(token: str = Depends(oauth2_scheme),
     """Если токена нет или не верен, вызываем 401_UNAUTHORIZED."""
     user = await get_current_user(token, db)
     if not user:
+        logger.info('Неудачная авторизация')
         raise credentials_exception
     return user
 

@@ -27,7 +27,7 @@ class AppSettings(BaseSettings):
     secret_key: str
     algorithm: str = 'HS256'
     access_token_expire_minutes: int = 15
-    black_list: Tuple[str, ...] = ('123.34.234.23',)
+    black_list: Tuple[str, ...] = ('127.0.1.1',)
     testing: bool
 
     class Config:

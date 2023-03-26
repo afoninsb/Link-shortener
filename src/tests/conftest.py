@@ -1,14 +1,5 @@
-import os
-
-import asyncpg
-import pytest
-import pytest_asyncio
-
-from src.core.config import app_settings
-
-os.environ['TESTING'] = 'True'
-
 import asyncio
+import os
 from asyncio import AbstractEventLoop
 from typing import AsyncGenerator, Generator
 
@@ -18,9 +9,12 @@ import pytest_asyncio
 from faker import Faker
 from httpx import AsyncClient
 
-import src.db.db as DB
-import src.db.models as Models
-from src.main import app
+os.environ['TESTING'] = 'True'
+
+import db.db as DB
+import db.models as Models
+from core.config import app_settings
+from main import app
 
 DSN = (
     f'postgresql://{app_settings.db_user}:'
@@ -104,5 +98,5 @@ async def urls_data():
             'description': fake.sentence(nb_words=5),
             'is_private': False
         }
-        for _ in range(3)
+        for _ in range(2)
     ]

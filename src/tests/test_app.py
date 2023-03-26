@@ -2,20 +2,6 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-# @pytest.mark.asyncio()
-# async def test_get_db_status(client: AsyncClient):
-#     response = await client.get('/api/v1/')
-#     assert response.status_code == HTTPStatus.OK
-#     assert response.json() == {'version': 'v1'}
-
-
-# @pytest.mark.asyncio()
-# async def test_ping(client: AsyncClient) -> None:
-#     response = await client.get('/api/v1/ping')
-#     assert response.status_code == status.HTTP_200_OK
-#     data = response.json()
-#     assert data == {'connection_db': True}
-
 
 @pytest.mark.asyncio()
 async def test_app(client: AsyncClient, create_db, user_data, urls_data):
