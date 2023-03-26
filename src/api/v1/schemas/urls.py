@@ -26,7 +26,7 @@ class UrlIsPrivate(BaseModel):
     is_private: bool
 
 
-class TrinstUser(BaseModel):
+class TrinsitUser(BaseModel):
     id: int
     username: str
 
@@ -36,7 +36,7 @@ class TrinstUser(BaseModel):
 
 class Transitions(BaseModel):
     date: datetime
-    user: TrinstUser | None
+    user: TrinsitUser | None
 
     class Config:
         orm_mode = True
