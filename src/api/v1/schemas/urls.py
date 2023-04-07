@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Union
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -11,7 +11,7 @@ class UrlCreate(BaseModel):
 
 
 class UrlBase(BaseModel):
-    id: int
+    id: UUID
     description: str
     original: str
     short: str
@@ -47,17 +47,16 @@ class TransistionsList(BaseModel):
     pages: int
     size: int
     page: int
-    items: List[Union[Transitions, None]] = None
+    items: list[Transitions | None] = None
 
     class Config:
         orm_mode = True
 
 
 class UrlStatus(BaseModel):
-    id: int
+    id: UUID
     transitions: TransistionsList
 
 
 class DBStatus(BaseModel):
     status: str
-    code: int

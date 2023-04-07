@@ -1,4 +1,5 @@
-from typing import Any, Union
+import uuid
+from typing import Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
@@ -13,16 +14,17 @@ from db.db import get_session
 from db.models import Transition, Url
 
 
-async def create_url(obj_in: urls_schemas.UrlCreate,
-                     db: AsyncSession,
-                     user: dict[str, Union[str, int]] | None
-                     ) -> Url:
+async def create_url(
+        obj_in: urls_schemas.UrlCreate,
+        db: AsyncSession,
+        user: dict[str, str | int] | None
+) -> Url:
     """Сохранение новой ссылки."""
-    max_id_obj = await db.execute(select(Url).order_by(-Url.id))
-    max_id = max_id_obj.Url.id + 1 if (max_id_obj := max_id_obj.first()) else 1
+
+    max_id = uuid.uuid4()
     obj_in_data = jsonable_encoder(obj_in)
     db_obj = Url(**obj_in_data)
-    db_obj.short = f'{app_settings.short_url}{to_short_id(max_id)}'
+    db_obj.short = f'{app_settings.short_url}{to_short_id(max_id.int)}'
     db_obj.id = max_id
     if user:
         db_obj.user_id = user['id']
@@ -34,10 +36,11 @@ async def create_url(obj_in: urls_schemas.UrlCreate,
     return db_obj
 
 
-async def get_url(url: Url,
-                  db: AsyncSession,
-                  user: dict[str, Union[str, int]] | None
-                  ) -> Url:
+async def get_url(
+        url: Url,
+        db: AsyncSession,
+        user: dict[str, str | int] | None
+) -> Url:
     """Оформляем переход по ссылке."""
     user_id = user['id'] if user else None
     db_obj = Transition(
@@ -49,10 +52,11 @@ async def get_url(url: Url,
     return url
 
 
-async def del_url(url: Url,
-                  db: AsyncSession,
-                  current_user: dict[str, str | int] | None
-                  ) -> Url:
+async def del_url(
+        url: Url,
+        db: AsyncSession,
+        current_user: dict[str, str | int] | None
+) -> Url:
     """Отмечаем ссылку удалённой."""
     if not url.user_id or current_user['id'] != url.user_id:
         raise HTTPException(
@@ -63,11 +67,12 @@ async def del_url(url: Url,
     return url
 
 
-async def is_private_url(url: Url,
-                         obj_in: urls_schemas.UrlIsPrivate,
-                         db: AsyncSession,
-                         current_user: dict[str, str | int] | None
-                         ) -> Url:
+async def change_link_visibility(
+        url: Url,
+        obj_in: urls_schemas.UrlIsPrivate,
+        db: AsyncSession,
+        current_user: dict[str, str | int] | None
+) -> Url:
     """Меняем видимость ссылки."""
     if not url.user_id or current_user['id'] != url.user_id:
         raise HTTPException(
@@ -79,9 +84,10 @@ async def is_private_url(url: Url,
     return url
 
 
-async def get_url_info(url_id: int,
-                       db: AsyncSession = Depends(get_session),
-                       ) -> Any:
+async def get_url_info(
+        url_id: uuid.UUID,
+        db: AsyncSession = Depends(get_session),
+) -> Any:
     not_found_exception = HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
     )
@@ -93,10 +99,11 @@ async def get_url_info(url_id: int,
         raise not_found_exception
 
 
-async def status_url(url_id: int,
-                     params: dict[str, int],
-                     db: AsyncSession = Depends(get_session),
-                     ):
+async def status_url(
+        url_id: uuid.UUID,
+        params: dict[str, int],
+        db: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
     """Возвращаем информацию о переходах по ссылке."""
     transitions = (await db.execute(select(Transition).where(
         Transition.url_id == url_id).options(

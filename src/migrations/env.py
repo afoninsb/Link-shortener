@@ -13,9 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 # access to the values within the .ini file in use.
 config = context.config
 
-from core.config import app_settings
-
-config.set_main_option('sqlalchemy.url', 'postgresql+asyncpg://postgres:postgres@db/postgres')
+config.set_main_option('sqlalchemy.url', 'postgresql+asyncpg://postgres:postgres@localhost/postgres')
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

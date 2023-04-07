@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -9,7 +10,8 @@ Base = declarative_base()
 class Url(Base):
     __tablename__ = 'urls'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, index=True, autoincrement=False)
     original = Column(String(1024), unique=True, nullable=False)
     short = Column(String(128), unique=True, index=True, nullable=False)
     description = Column(String(1024), nullable=False)
@@ -46,7 +48,7 @@ class Transition(Base):
     url = relationship('Url', back_populates='transitions')
     user = relationship('User', back_populates='transitions')
 
-    url_id = Column(Integer, ForeignKey('urls.id', ondelete='CASCADE'))
+    url_id = Column(UUID(as_uuid=True), ForeignKey('urls.id', ondelete='CASCADE'))
     user_id = Column(
         Integer,
         ForeignKey('users.id', ondelete='CASCADE'),

@@ -1,5 +1,5 @@
 import contextlib
-from typing import Any, Dict, List
+from typing import Any
 
 from fastapi import HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
@@ -18,7 +18,7 @@ class Paginator:
         return (f'{self.__class__.__name__}: offset: {self.offset}, '
                 f'limit: {self.limit}')
 
-    def paginate(self, content: List[Any]) -> Dict[str, int | List[Any]]:
+    def paginate(self, content: list[Any]) -> dict[str, int | list[Any]]:
         length = len(content)
         if length % self.size == 0:
             pages = length // self.size

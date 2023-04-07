@@ -20,13 +20,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post('/user/signup',
-             response_model=users_schemas.UserOut,
-             status_code=status.HTTP_201_CREATED,
-             responses={
-                 400: {"description": "Username уже существует"},
-             }
-             )
+@router.post(
+    '/user/signup',
+    response_model=users_schemas.UserOut,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"description": "Username уже существует"},
+    }
+)
 async def create_user(
     data: users_schemas.UserAuth,
     db: AsyncSession = Depends(get_session)
@@ -39,17 +40,18 @@ async def create_user(
             detail="Username уже существует"
         )
     new_user = await users_utils.create_user(data, db)
-    logger.info(f'Зарегистрировался новый юзер {new_user.username}')
+    logger.info(f'New user registered {new_user.username}')
     return jsonable_encoder(new_user)
 
 
-@router.post("/user/login",
-             response_model=users_schemas.Token,
-             status_code=status.HTTP_200_OK,
-             responses={
-                 401: {"description": "Не авторизован"},
-             }
-             )
+@router.post(
+    "/user/login",
+    response_model=users_schemas.Token,
+    status_code=status.HTTP_200_OK,
+    responses={
+        401: {"description": "Не авторизован"},
+    }
+)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_session),
@@ -58,7 +60,7 @@ async def login_for_access_token(
     user = await users_utils.authenticate_user(
         form_data.username, form_data.password, db)
     if not user:
-        logger.info('Ошибочная авторизация')
+        logger.info('Wrong authorization')
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -69,32 +71,34 @@ async def login_for_access_token(
     access_token = await users_utils.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    logger.info(f'Авторизовался юзер {user.username}')
+    logger.info(f'User logged in {user.username}')
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/user/me",
-            response_model=users_schemas.UserOut,
-            status_code=status.HTTP_200_OK,
-            responses={
-                401: {"description": "Не авторизован"},
-            }
-            )
+@router.get(
+    "/user/me",
+    response_model=users_schemas.UserOut,
+    status_code=status.HTTP_200_OK,
+    responses={
+        401: {"description": "Не авторизован"},
+    }
+)
 async def user_me(
     current_user: User = Depends(users_utils.unauthorized),
 ) -> Any:
     """Информация о текущем пользователе."""
-    logger.info(f'Запрошена информация о юзере {current_user["username"]}')
+    logger.info(f'User information requested {current_user["username"]}')
     return current_user
 
 
-@router.get('/user/status',
-            response_model=users_schemas.UserStatus,
-            status_code=status.HTTP_200_OK,
-            responses={
-                401: {"description": "Не авторизован"},
-            }
-            )
+@router.get(
+    '/user/status',
+    response_model=users_schemas.UserStatus,
+    status_code=status.HTTP_200_OK,
+    responses={
+        401: {"description": "Не авторизован"},
+    }
+)
 async def get_user_status(
     page: int | None = 0,
     size: int | None = 10,
@@ -103,7 +107,7 @@ async def get_user_status(
 ) -> Any:
     """Статус пользователя."""
     params = {'page': page, 'size': size} if page and size else {}
-    logger.info(f'Запрошен стату юзера {current_user["username"]}')
+    logger.info(f'User status requested {current_user["username"]}')
     return await users_utils.status_user(
         current_user,
         db=db,

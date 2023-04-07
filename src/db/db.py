@@ -4,19 +4,11 @@ from sqlalchemy.orm import sessionmaker
 
 from core.config import app_settings
 
-if app_settings.testing:
-    db_name = "test_db"
-    database_dsn: PostgresDsn = (
-        f'postgresql+asyncpg://{app_settings.db_user}:'
-        f'{app_settings.db_password}@{app_settings.db_host}'
-        f':{app_settings.db_port}/{db_name}'
-    )
-else:
-    database_dsn: PostgresDsn = (
-        f'postgresql+asyncpg://{app_settings.db_user}:'
-        f'{app_settings.db_password}@{app_settings.db_host}'
-        f':{app_settings.db_port}/{app_settings.db}'
-    )
+database_dsn: PostgresDsn = (
+    f'postgresql+asyncpg://{app_settings.db_user}:'
+    f'{app_settings.db_password}@{app_settings.db_host}'
+    f':{app_settings.db_port}/{app_settings.db}'
+)
 engine = create_async_engine(database_dsn, echo=True, future=True)
 async_session = sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False

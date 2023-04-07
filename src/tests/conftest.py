@@ -3,29 +3,55 @@ import os
 from asyncio import AbstractEventLoop
 from typing import AsyncGenerator, Generator
 
-import asyncpg
 import pytest
 import pytest_asyncio
 from faker import Faker
 from httpx import AsyncClient
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 
 os.environ['TESTING'] = 'True'
 
-import db.db as DB
 import db.models as Models
 from core.config import app_settings
 from main import app
 
-DSN = (
+db_name = "testdb"
+database_dsn = (
     f'postgresql://{app_settings.db_user}:'
     f'{app_settings.db_password}@{app_settings.db_host}'
-    f':{app_settings.db_port}/'
+    f':{app_settings.db_port}/{db_name}'
 )
 
 fake = Faker()
 
 
-@pytest_asyncio.fixture(scope='function')
+@pytest.fixture(scope="session")
+def engine():
+    return create_engine(database_dsn, echo=False)
+
+
+@pytest.fixture(scope="session")
+def tables(engine):
+    Models.Base.metadata.create_all(engine)
+    yield
+    Models.Base.metadata.drop_all(engine)
+
+
+@pytest.fixture
+async def dbsession(engine, tables):
+    """Returns an sqlalchemy session,
+    and after the test tears down everything properly.
+    """
+    async_session = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    async with async_session() as session:
+        yield session
+
+
+@pytest_asyncio.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
         app=app,
@@ -37,49 +63,9 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture(scope="session")
 def event_loop() -> Generator[AbstractEventLoop, None, None]:
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
-
-
-async def temp_db() -> None:
-    dsn_1 = f'{DSN}{app_settings.db}'
-    conn = await asyncpg.connect(dsn_1)
-    sql_command = (
-        f'CREATE DATABASE {DB.db_name} OWNER {app_settings.db_user};'
-    )
-    await conn.execute(sql_command)
-    await conn.close()
-
-
-@pytest_asyncio.fixture(scope="function")
-async def create_db():
-    await temp_db()
-    async with DB.engine.begin() as conn:
-        await conn.run_sync(Models.Base.metadata.drop_all)
-        await conn.run_sync(Models.Base.metadata.create_all)
-    await DB.engine.dispose()
-
-
-@pytest_asyncio.fixture(scope="function")
-async def dropdb():
-    dsn = f'{DSN}{app_settings.db}'
-    conn = await asyncpg.connect(dsn)
-    sql_command = (
-        "UPDATE pg_database SET datallowconn = 'false' "
-        f"WHERE datname = '{DB.db_name}';"
-    )
-    await conn.execute(sql_command)
-    sql_command = (
-        "SELECT pg_terminate_backend(pg_stat_activity.pid) "
-        "FROM pg_stat_activity "
-        f"WHERE pg_stat_activity.datname = '{DB.db_name}' "
-        "AND pid <> pg_backend_pid();"
-    )
-    await conn.execute(sql_command)
-    sql_command = f'DROP DATABASE {DB.db_name};'
-    await conn.execute(sql_command)
-    await conn.close()
 
 
 @pytest_asyncio.fixture(scope='function')

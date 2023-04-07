@@ -41,22 +41,24 @@ async def get_user(username: str, db: AsyncSession) -> User:
     return user.scalar_one_or_none()
 
 
-async def authenticate_user(username: str,
-                            password: str,
-                            db: AsyncSession
-                            ) -> User | bool:
+async def authenticate_user(
+        username: str,
+        password: str,
+        db: AsyncSession
+) -> User | None:
     """Аутентификация пользователя."""
     user = await get_user(username, db)
     if user and await verify_password(password, user.hashed_password):
         return user
-    logger.info(f'Аутентификаwия не прошла {username}')
+    logger.info(f'Authentication failed {username}')
     return False
 
 
-async def create_access_token(data: dict,
-                              expires_delta:
-                              timedelta | None = None
-                              ) -> str:
+async def create_access_token(
+        data: dict,
+        expires_delta:
+        timedelta | None = None
+) -> str:
     """Получение токена авторизации."""
     to_encode = data.copy()
     if expires_delta:
@@ -72,9 +74,10 @@ async def create_access_token(data: dict,
     )
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme),
-                           db: AsyncSession = Depends(get_session)
-                           ) -> dict[str, str | int] | None:
+async def get_current_user(
+        token: str = Depends(oauth2_scheme),
+        db: AsyncSession = Depends(get_session)
+) -> dict[str, str | int] | None:
     """Проверка наличия и правильности токена авториазции."""
     if not token:
         return None
@@ -94,9 +97,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     return None if user is None else jsonable_encoder(user)
 
 
-async def unauthorized(token: str = Depends(oauth2_scheme),
-                       db: AsyncSession = Depends(get_session)
-                       ) -> Any:
+async def unauthorized(
+        token: str = Depends(oauth2_scheme),
+        db: AsyncSession = Depends(get_session)
+) -> Any:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         headers={"WWW-Authenticate": "Bearer"},
@@ -104,14 +108,15 @@ async def unauthorized(token: str = Depends(oauth2_scheme),
     """Если токена нет или не верен, вызываем 401_UNAUTHORIZED."""
     user = await get_current_user(token, db)
     if not user:
-        logger.info('Неудачная авторизация')
+        logger.info('Failed Authorization')
         raise credentials_exception
     return user
 
 
-async def create_user(obj_in: users_schemas.UserAuth,
-                      db: AsyncSession
-                      ) -> User:
+async def create_user(
+        obj_in: users_schemas.UserAuth,
+        db: AsyncSession
+) -> User:
     """Создает нового пользователя в БД."""
     obj_in_data = jsonable_encoder(obj_in)
     hashed_password = await get_password_hash(obj_in_data['password'])
@@ -125,10 +130,11 @@ async def create_user(obj_in: users_schemas.UserAuth,
     return db_obj
 
 
-async def status_user(current_user: dict[str, str | int],
-                      params: dict[str, int],
-                      db: AsyncSession = Depends(get_session),
-                      ):
+async def status_user(
+        current_user: dict[str, str | int],
+        params: dict[str, int],
+        db: AsyncSession = Depends(get_session),
+) -> dict[str, Any]:
     """Возвращаем информацию о ссылках пользователя."""
     urls = (await db.execute(
         select(Url).where(Url.user_id == current_user['id'])

@@ -1,15 +1,15 @@
 """Initial
 
-Revision ID: fcaa85a5ddab
+Revision ID: 80c26ad83a15
 Revises: 
-Create Date: 2023-03-24 15:13:54.437060
+Create Date: 2023-04-07 16:41:39.908469
 
 """
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = 'fcaa85a5ddab'
+revision = '80c26ad83a15'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -25,7 +25,7 @@ def upgrade():
     sa.UniqueConstraint('username')
     )
     op.create_table('urls',
-    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('id', sa.UUID(), autoincrement=False, nullable=False),
     sa.Column('original', sa.String(length=1024), nullable=False),
     sa.Column('short', sa.String(length=128), nullable=False),
     sa.Column('description', sa.String(length=1024), nullable=False),
@@ -36,11 +36,12 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('original')
     )
+    op.create_index(op.f('ix_urls_id'), 'urls', ['id'], unique=False)
     op.create_index(op.f('ix_urls_short'), 'urls', ['short'], unique=True)
     op.create_table('transitions',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('date', sa.DateTime(), nullable=True),
-    sa.Column('url_id', sa.Integer(), nullable=True),
+    sa.Column('url_id', sa.UUID(), nullable=True),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['url_id'], ['urls.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
@@ -55,6 +56,7 @@ def downgrade():
     op.drop_index(op.f('ix_transitions_date'), table_name='transitions')
     op.drop_table('transitions')
     op.drop_index(op.f('ix_urls_short'), table_name='urls')
+    op.drop_index(op.f('ix_urls_id'), table_name='urls')
     op.drop_table('urls')
     op.drop_table('users')
     # ### end Alembic commands ###

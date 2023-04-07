@@ -19,15 +19,11 @@ class AppSettings(BaseSettings):
     db_password: str = 'postgres'
     db_host: str = 'localhost'
     db_port: int = 5432
-    database_dsn: PostgresDsn = (
-        f'postgresql+asyncpg://{db_user}:{db_password}'
-        f'@{db_host}:{db_port}/{db}'
-    )
     short_url: str
     secret_key: str
     algorithm: str = 'HS256'
     access_token_expire_minutes: int = 15
-    black_list: Tuple[str, ...] = ('127.0.1.1',)
+    black_list: Tuple[str, ...] = ('128.0.1.1',)
     testing: bool
 
     class Config:
